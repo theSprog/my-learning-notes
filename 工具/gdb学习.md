@@ -226,3 +226,64 @@ $x/16 0x12345678
 
 #### 调试 python(建议用pdb)
 
+
+
+
+
+### 远程调试
+
+假如服务器存在一个程序出现 bug，我们不可能在服务器上调试程序，通常的做法是用 `gdbserver` 监听某个端口，然后在本地调试远程程序。
+
+
+
+#### 远程
+
+远程服务器上运行命令：
+
+```shell
+$gdbserver <ip:port> <program> <argument>
+
+# 例如：用参数 foo.txt 调试 vim
+$gdbserver localhost:9527 vim foo.txt
+```
+
+`ip` 指代被调试机器的IP地址（其实目前该功能已经被忽略，随便填都行），`port` 可以服务机上任意选择，只要不与其他程序冲突，后跟被调试程序和参数。
+
+
+
+#### 本地
+
+开启 `gdb` 后，使用命令
+
+```shell
+$gdb
+$target remote <ip:port>
+```
+
+
+
+#### vscode
+
+新建 `.vscode` 文件夹后放入如下配置，关键在于我所注释的那些参数
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "xxxx",	// 被调试程序的名称
+            "args": [],	// 参数
+            "cwd": "xxx/xxx",	//被调试程序的目录
+            "environment": [],
+            "miDebuggerPath": "/usr/bin/gdb",	// 调试工具
+            "miDebuggerServerAddress": "ip:port",	// IP:端口号
+            "useExtendedRemote": true,	// 使用 extended-remote 可以在本地退出后保持连接不关闭
+        }
+    ]
+}
+```
+
+然后点击调试即可。使用 `extended-remote` 后服务端无法再 `ctrl+c` 关闭，只能用 `ps -a` 然后 `kill` 进程了。

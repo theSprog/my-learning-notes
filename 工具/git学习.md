@@ -1,17 +1,3 @@
----
-title: git学习
-date: 2021-10-16 10:43:50
-tags: git
----
-
-git 基本命令记录
-
-<!-- more -->
-
-<!-- toc -->
-
-
-
 ## 前言
 
 查看 git 所支持的命令
@@ -26,7 +12,21 @@ $git --help
 $git <command> --help
 ```
 
+PS: 一般只用 `git` 维护纯文本文件
 
+
+
+创建git库：进入某个空文件夹(不一定需要空文件夹，但是建议每个project都单独使用空文件夹)
+
+```bash
+$git init
+```
+
+成功后git会在此目录下生成 `.git` 文件夹。`.git`包括暂存区和版本库
+
+
+
+---
 
 ## git三大区域
 
@@ -38,23 +38,17 @@ git一共划分为三大区域: 工作区(Working Directory)，暂存区(Stage,�
 
 ![](https://bucket01-1259777572.cos.ap-chengdu.myqcloud.com/img/202112031633804.png)
 
-## git基本命令
-
-### 创建git库
-
-进入某个空文件夹(不一定需要空文件夹，但是建议每个project都单独使用空文件夹)
-
-```bash
-$git init
-```
-
-成功后git会在此目录下生成 `.git` 文件夹
-
-`.git`包括暂存区和版本库
 
 
 
-### 将文件暂存到暂存区
+
+---
+
+## 三区转移命令
+
+### 工作区与暂存区
+
+#### 工作区 -> 暂存区
 
 假设在本文件夹下新增一个`test.txt`文件
 
@@ -62,9 +56,7 @@ $git init
 $git add test.txt
 ```
 
-要将所有后缀为txt文件都添加，可以用 *.txt
-
-要将所有文件都添加，直接用 . 或 *
+要将所有后缀为txt文件都添加，可以用 `git add *.txt`。要将所有文件都添加，直接用 `.` 或 `*`
 
 ```bash
 $git add *.txt
@@ -72,37 +64,195 @@ $git add *
 $git add .
 ```
 
-`git add .` 会把本地所有untrack的文件都加入暂存区，并且会根据`.gitignore`做过滤，但是`git add *` 会忽略`.gitignore`把任何文件都加入
-
-##### error:
-
-- 假若出现 `'...' does not have a commit checked out` 是因为在该仓库下还有其他 git 仓库，不允许仓库里面还有仓库
+- `git add .` 会把本地所有 untrack 的文件都加入暂存区，并且会根据`.gitignore`做过滤
+- 但是`git add *` 会无视`.gitignore`把任何文件都加入
 
 
 
-PS: 一般只用 `git` 维护纯文本文件
+error&warning:
+
+- 假若出现 `'...' does not have a commit checked out` 是因为在该仓库下还有其他 git 仓库，git 不允许仓库里面嵌套仓库
+
+- 假若出现 `warning:LF will be replaced by CRLF in xxx` 代表 git 自动将 win 平台下的 CRLF 转换为 LF 换行符
+
+  > 可以配置 git 是否进行自动转换
+  >
+  > ```shell
+  > $git config --global core.autocrlf false/true
+  > ```
 
 
 
-### 将暂存文件提交到版本库(history)
+#### 暂存区 -> 工作区
 
-```bash
-$git commit -m <message>
+暂存区到工作区的命令随着版本不固定，当 `git add` 之后可以使用 `git status` 让 git 提示应该使用哪个命令去 `unstage`
+
+```shell
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
 ```
 
-其中`<message>`是本次提交所附带的注释，用双引号包裹注释内容
+上面表示，使用 `git restore --staged` 可以将文件撤回到工作区。
+
+**注意**：这不仅可以用来将暂存区的文件撤回到工作区，也能够用于撤销对工作区的修改
 
 
 
-### 查看working tree中文件的状态
+
+
+### 暂存区到本地库
+
+#### 暂存区 -> 本地库
+
+```shell
+$git commit -m "<message>"
+```
+
+其中`<message>`是本次提交所附带的注释，需要用双引号包裹注释内容
+
+
+
+#### 本地库 -> 暂存区
+
+见 **git基本命令/版本回退**
+
+
+
+
+
+---
+
+## git基本命令
+
+### 用户签名
+
+设置用户签名的方式有两种：
+
+- 单个仓库设置
+
+  > ```shell
+  > git config user.name 用户名
+  > git config user.email 邮箱
+  > ```
+  >
+  > 配置好后信息存放在 `.git/config` 中
+
+- 全局配置
+
+  > ```shell
+  > git config --global user.name 用户名
+  > git config --global user.email 邮箱
+  > ```
+  >
+  > 配置好后信息存放在 `~/.gitconfig` 中
+
+用户名和邮箱可以不真实，只要符合格式即可。用以表示本客户端的名称，在分布式系统中表示某个操作是谁发出的，本账号和 github 无关。
+
+
+
+
+
+
+
+### 查看git仓库的状态
 
 ```bash
 $git status
+
+On branch xxx	# 表示在 xxx 分支下
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:	# 目前相对暂存区而言不是最新的文件
+	xxx
+	
+Changes to be committed:	# 尚未 commit 的文件
+	xxx
+	
+Untracked files:	# 未被 git 管理的文件
+	xxx
 ```
 
-在工作区中新增的文件在`Untracked files`下，修改的文件在`modified`下
+- 在工作区中新增的还未被 Git 管理的文件在`Untracked files`下
 
-这里会做两次对比，工作区 vs 暂存区 以及 暂存区 vs 版本库
+- 已经在暂存区备份但是在工作区修改后的文件在`modified`下。
+
+  > `modified` 顾名思义就是修改过的意思。针对的就是已经在暂存区的文件最近又发生了改动的情况。
+  >
+  > 要想撤销修改，详情见 暂存区->工作区 这一节
+
+
+
+
+
+
+
+### 查看历史版本
+
+```bash
+# 详细版本
+$git log
+```
+
+显示结果从上到下依次是最近`commit`到最远`commit`。`commit`后面一串符号表示当时提交所生成的`commit_id`
+
+```shell
+# 简化版本
+$git reflog
+```
+
+打印结果表示HEAD在不同`commit_id`之间跳跃的历史，用于版本回退
+
+![](https://src-1259777572.cos.ap-chengdu.myqcloud.com/202112031634117.png)
+
+
+
+
+
+
+
+### 版本回退
+
+#### 通过 id 回退
+
+将工作区回退到指定`commit_id`时的状态，有趣的是，虽然名字叫回退，但是通过`commit_id`也可以**回到未来**
+
+```bash
+$git reset --hard commit_id	# commit_id是想要去到的版本号
+```
+
+`commit_id`没有必要写全，只要写前几位，使得没有歧义就行了。`hard` 的含义是三个分区都回退到当时
+
+PS：回退之后 `git log` 的结果也会回到当时的状态。
+
+
+
+#### 相对 HEAD 回退
+
+HEAD表示当前版本，在当前版本的基础上将工作区回退 n 次
+
+```bash
+$git reset --hard HEAD~n	# n是需要回退的次数
+```
+
+假如现在是第5次提交，回退3次， 则`n=3`。HEAD其实是一个指针，指向的是不同版本的结点。
+
+可以通过查看 `.git/HEAD` 文件来查看当前的 `HEAD` 指针指向哪个文件。
+
+
+
+#### --hard
+
+这里的 --hard 参数可以修改，修改后命令有不同的含义
+
+```bash
+git reset –soft commit_xxid   	# 改了暂存区和工作区，版本库还是当前这个样子
+
+git reset –mixed commit_xxid 	# 改了版本库和暂存区，工作区还是当前这个样子
+
+git reset –hard commit_xxid  	# 改了版本库、暂存区和工作区，三个分区都变了
+```
+
+
 
 
 
@@ -126,90 +276,155 @@ $git diff --cached	# 暂存区 <-> 版本库
 
 
 
-### 查看每次commit日志
 
-```bash
-$git log
+
+
+
+## git 分支操作
+
+### 分支是什么
+
+在版本控制中，可以同时推进多个任务，为每个任务设置一个主线的副本，每个团队在自己的副本上开发，等待开发完成后再合并回主线上。分支简单来讲就是主线的副本。
+
+同一个主线可以衍生出多个分支，相互独立互不影响，因此很符合劳动分工理念。如果某个分支开发失败，直接删除此分支即可，不会对其他分支产生影响。
+
+
+
+### 分支管理策略
+
+首先，`master`分支应该是非常稳定的，也就是仅用来发布新版本，平时不能在上面干活；
+
+那在哪干活呢？干活都在`dev`分支上，也就是说，`dev`分支是不稳定的，到某个时候，比如1.0版本发布时，再把`dev`分支合并到`master`上，在`master`分支发布1.0版本；
+
+每个开发人员都在`dev`分支上干活，每个人都有自己的分支，时不时地往`dev`分支上合并就可以了。
+
+
+
+### 分支操作
+
+| 作用     | 命令                                              |
+| -------- | ------------------------------------------------- |
+| 创建分支 | git branch \<name>                                |
+| 切换分支 | git checkout \<name> 或者是 git switch \<name>    |
+| 查看分支 | git branch -v                                     |
+| 删除分支 | 使用 `branch` 的 `-d `参数：git branch -d \<name> |
+
+其他复杂操作：
+
+- 合并指定分支到当前分支, 若指定分支相对于当前分支只是新增了东西，则合并是顺利的
+
+  ```bash
+  $git merge <name>	# 一般而言都是将 dev 分支合并到 master 分支
+  
+  # 上面那种写法可能会用Fast-forward模式，不会新建一个commit，这种写法会新建一个commit
+  # --no-ff 表示禁用 Fast-forward
+  $git merge --no-ff -m "merge with no-ff" dev	
+  ```
+
+
+
+### 分支冲突
+
+合并分支时，两个分支在**同一个文件**有两套完全不同的修改。Gt无法替我们决定使用哪一个。必须人为决定新代码内容。
+
+> 当出现 `merge conflict`  时 `git status` 的状态会出现 `both modified`，表示该文件存在两个修改。同时 branch 的状态也变成 `Merging`。
+
+当 git 无法自动合并分支时，就必须首先解决冲突再合并。解决冲突就是把 git 合并失败的文件手动编辑为我们希望的内容，再提交。（吐槽一句：居然还要手动）
+
+解决方法：
+
+打开冲突文件，冲突处会出现如下字样
+
+```shell
+<<<<<<< HEAD
+xxxxx1
+xxxxx2
+=============
+yyyyy1
+yyyyy2
+>>>>>>> hot-fix
 ```
 
-显示结果从上到下依次是最近`commit`到最远`commit`
+上面的内容表示 `xxxx` 和  `yyyy` 存在冲突，手动选定要保留的内容，同时删除其他 `git` 的标记，修改完后再次 `git add`。
 
-`commit`后面一串符号表示当时提交所生成的`commit_id`
+例如可以将文件修改为如下形式同时删除 git 标记：
 
-
-
-### 回退
-
-HEAD表示当前版本，在当前版本的基础上将工作区回退 n 次
-
-```bash
-$git reset --hard HEAD~n	# n是需要回退的次数
+```
+xxxxx1
+yyyyy2
 ```
 
-假如现在是第5次提交，回退3次， 则`n=3`
+然后再 `git add .` 并且 `git commit` 提交，一切完备后分支状态也就不再是 `Merging` 了
 
-HEAD其实是一个指针，指向的是不同版本的结点
+![image-20230227220201648](https://src-1259777572.cos.ap-chengdu.myqcloud.com/image-20230227220201648.png)
 
 
 
-将工作区回退到指定`commit_id`时的状态,
+### bug修复策略
 
-有趣的是，哪怕现在在很靠之前的状态，通过`commit_id`也可以”回到未来“
+//TODO，没有大团队工程实践，暂弃，后补
 
-```bash
-$git reset --hard commit_id	# commit_id是想要回到的状态
+
+
+
+
+---
+
+## 团队协作
+
+### push
+
+push 命令用于从将本地的分支上传到远程的某一分支并与其合并。
+
+```shell
+$git push <远程主机名> <本地分支名>:<远程分支名>
 ```
 
-`commit_id`没有必要写全，只要写前几位，使得没有歧义就行了
+如果本地分支名与远程分支名相同，则可以省略冒号。
 
-PS：回退之后log的结果也会回到当时的状态
+例如：
 
-
-
-这里的 --hard 参数可以修改，修改后命令有不同的含义
-
-```bash
-git reset –soft commit_xxid   	# 改了暂存区和工作区，版本库还是当前这个样子
-
-git reset –mixed commit_xxid 	# 改了版本库和暂存区，工作区还是当前这个样子
-
-git reset –hard commit_xxid  	# 改了版本库、暂存区和工作区，三个分区都变了
+```shell
+$git push origin master
 ```
 
+上面命令表示，将本地的 master 分支推送到远程的 master 分支上，并与其合并
 
 
-### 查看版本变更历史
 
-```bash
-$git reflog
+### pull
+
+pull = fetch + merge。从远程服务器获取到一个 branch 分支的更新到本地，并更新本地的某一分支，叫做pull。
+
+```shell
+$git pull <远程主机名> <远程分支名>:<本地分支名>
 ```
 
-打印结果表示HEAD在不同`commit_id`之间跳跃的历史，用于”回到未来“
+远程主机名可以通过 `git remote -v` 查看。如果远程分支是**与当前分支合并**，则冒号后面的部分可以省略。
 
-![](https://bucket01-1259777572.cos.ap-chengdu.myqcloud.com/img/202112031634117.png)
+例如：
 
+```shell
+$git pull origin master
+```
 
-
-### 撤销修改
-
-撤销不同于回退，回退是在不同的版本间跳跃
-
-- 修改了某文件，还没有`add`，但是想撤销本次修改。相当于用暂存区来还原工作区
-
-   ```bash
-   $git checkout -- <file>
-   ```
-
-- 修改了某文件，有`add`，但没有`commit`，但是想撤销本次修改。相当于用版本库来还原暂存区，再用暂存区还原工作区
-
-   ```bash
-   $git reset HEAD <file>	
-   $git checkout -- <file>
-   ```
-
-- 修改文件都已经`commit`了，使用回退`commit_id`吧
+上面命令表示，取回 origin 的 master 分支，再与本地的当前分支合并
 
 
+
+### fetch
+
+fetch 命令用于从远程获取代码库，该命令执行完后需要手动执行 `git merge` 远程分支到你所在的分支。
+
+
+
+
+
+
+
+---
+
+## 远端对接
 
 ### git和远程仓库对接(以github为例)
 
@@ -249,91 +464,24 @@ $git reflog
 
    输入yes即可
 
-- 查看远程库信息
 
-   ```bash
-   $git remote -v
-   origin  git@gitee.com:theSprog/myblog.git (fetch)
-   origin  git@gitee.com:theSprog/myblog.git (push)
-   ```
 
-- 解绑远程库。解绑并不会真正删除远程库，要真正删除，必须手动到github上操作
 
-   ```bash
-   $git remote rm <repoName>
-   ```
-
-   
-
-从远端clone到本地, 建议ssh协议，速度快
+### 查看远程库信息
 
 ```bash
-$git clone git@gitee.com:<yourName>/<yourRepoName>.git
+$git remote -v
+origin  git@gitee.com:theSprog/myblog.git (fetch)
+origin  git@gitee.com:theSprog/myblog.git (push)
 ```
 
 
 
-从远程服务器获取到一个branch分支的更新到本地，并更新本地库，叫做pull。
+### 解绑远程库
 
-pull = fetch + merge
+解绑并不会真正删除远程库，要真正删除，必须手动到github上操作
 
 ```bash
-$git pull git@gitee.com:theSprog/myblog.git
+$git remote rm <repoName>
 ```
 
-
-
-### 创建分支、合并分支
-
-- 创建分支，使用`branch`命令
-
-   ```bash
-   $git branch <name>
-   ```
-
-- 切换分支，使用 `checkout` 或 `switch` 命令
-
-   ```bash
-   $git checkout <name> 	# $git checkout -b <name> 参数表示创建并切换
-   $git switch <name> 		# $git switch -c <name> 参数表示创建并切换
-   ```
-
-- 查看有多少分支，当前处于哪个分支
-
-   ```bash
-   $git branch
-   ```
-
-- 合并指定分支到当前分支, 若指定分支相对于当前分支只是新增了东西，则合并是顺利的
-
-   ```bash
-   $git merge <name>	# 一般而言都是将 dev 分支合并到 master 分支
-   
-   # 上面那种写法可能会用Fast-forward模式，不会新建一个commit，这种写法会新建一个commit
-   # --no-ff 表示禁用 Fast-forward
-   $git merge --no-ff -m "merge with no-ff" dev	
-   ```
-
-- 删除分支, 使用 `branch` 的 `-d `参数
-
-   ```bash
-   $git branch -d <name>
-   ```
-
-- 当git无法自动合并分支时，就必须首先解决冲突。解决冲突就是把git合并失败的文件手动编辑为我们希望的内容，再提交。（吐槽一句：居然还要手动）
-
-
-
-### 分支管理策略
-
-首先，`master`分支应该是非常稳定的，也就是仅用来发布新版本，平时不能在上面干活；
-
-那在哪干活呢？干活都在`dev`分支上，也就是说，`dev`分支是不稳定的，到某个时候，比如1.0版本发布时，再把`dev`分支合并到`master`上，在`master`分支发布1.0版本；
-
-开发人员每个人都在`dev`分支上干活，每个人都有自己的分支，时不时地往`dev`分支上合并就可以了。
-
-
-
-### bug修复策略
-
-//TODO，没有大团队工程实践，暂弃，后补
